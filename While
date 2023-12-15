@@ -1,0 +1,21 @@
+#!/bin/bash
+
+count=0
+file_condition=true
+
+while [ $count -lt 3 ] && $file_condition; do
+    echo "Iteration $((count + 1))"
+    
+    # Check if the file exists
+    if [ -e "your_file_path_here" ]; then
+        echo "File exists."
+        # Update file_condition to true or false based on your logic
+        # For example: file_condition=false
+    else
+        echo "File does not exist."
+        # Update file_condition to true or false based on your logic
+        # For example: file_condition=true
+    fi
+
+    count=$((count + 1))
+done
