@@ -1,26 +1,31 @@
-Certainly! Here's an example of a PowerShell script that updates an XML file:
+Certainly! Below is an example of a PowerShell script that adds a new element to an XML file:
 
 ```powershell
-# Function to update XML content
-function Update-XmlContent {
+# Function to add a new XML element
+function Add-XmlElement {
     param (
         [string]$xmlFilePath,
-        [string]$elementName,
-        [string]$newContent
+        [string]$parentElementPath,
+        [string]$newElementName,
+        [string]$newElementContent
     )
 
     # Load the XML file
-    [xml]$xml = Get-Content $xmlFilePath
+    $xml = [xml](Get-Content $xmlFilePath)
 
-    # Find the element by name
-    $targetElement = $xml.SelectSingleNode("//${elementName}")
+    # Find the parent element by XPath
+    $parentElement = $xml.SelectSingleNode($parentElementPath)
 
-    if ($targetElement -ne $null) {
-        # Update the content of the element
-        $targetElement.InnerText = $newContent
+    if ($parentElement -ne $null) {
+        # Create a new element
+        $newElement = $xml.CreateElement($newElementName)
+        $newElement.InnerText = $newElementContent
+
+        # Append the new element to the parent
+        $parentElement.AppendChild($newElement)
     } else {
-        # If the element is not found, you can handle it accordingly
-        Write-Host "Element '$elementName' not found in the XML file."
+        # If the parent element is not found, you can handle it accordingly
+        Write-Host "Parent element specified by XPath '$parentElementPath' not found in the XML file."
     }
 
     # Save the updated XML file
@@ -29,12 +34,13 @@ function Update-XmlContent {
 
 # Example usage
 $xmlFilePath = "C:\Path\To\Your\File.xml"
-$elementName = "existingElement"
-$newContent = "Updated Content"
+$parentElementPath = "//ParentElement"  # Specify the XPath of the parent element
+$newElementName = "NewElement"
+$newElementContent = "New Element Content"
 
-Update-XmlContent -xmlFilePath $xmlFilePath -elementName $elementName -newContent $newContent
+Add-XmlElement -xmlFilePath $xmlFilePath -parentElementPath $parentElementPath -newElementName $newElementName -newElementContent $newElementContent
 ```
 
-Replace `"C:\Path\To\Your\File.xml"`, `"existingElement"`, and `"Updated Content"` with your XML file path, the name of the element you want to update, and the new content you want to set, respectively.
+Replace `"C:\Path\To\Your\File.xml"`, `"//ParentElement"`, `"NewElement"`, and `"New Element Content"` with your XML file path, the XPath of the parent element where you want to add the new element, the name of the new element, and its content, respectively.
 
-This script uses the `[xml]` type accelerator to load the XML file and then selects the target element using XPath. It updates the content of the element and saves the changes back to the original XML file.
+This script uses the `[xml]` type accelerator to load the XML file and then creates a new element with the specified name and content. It appends the new element to the specified parent element and saves the changes back to the original XML file. Adjust the XPath according to the structure of your XML file.
