@@ -1,0 +1,24 @@
+
+Capturing detailed SSL traces for SMTP communication in PowerShell can be challenging as it requires low-level network packet inspection. PowerShell cmdlets like Test-NetConnection don't provide detailed SSL/TLS tracing capabilities. However, you can use external tools like Wireshark to capture and analyze network traffic, including SSL/TLS handshakes.
+
+Here's a general outline of how you can capture SSL traces for SMTP communication using Wireshark:
+
+Install Wireshark: If you haven't already, download and install Wireshark from https://www.wireshark.org/.
+
+Start Wireshark: Launch Wireshark on your system.
+
+Select Network Interface: Choose the network interface that corresponds to the network connection you want to monitor. This could be your Ethernet adapter or Wi-Fi adapter.
+
+Apply a Capture Filter: Apply a capture filter to only capture SMTP traffic. You can use a filter like tcp port 25 to capture traffic on port 25, which is the default port for SMTP. If you're interested in SMTPS (SMTP over SSL), you can use a filter like tcp port 465.
+
+Start Capture: Click on the "Start" button or press the corresponding keyboard shortcut to start capturing traffic.
+
+Perform SMTP Activity: Now, perform the SMTP activity you want to capture traces for. This could be sending an email, logging in to an SMTP server, etc.
+
+Stop Capture: Once you've captured the desired traffic, stop the capture in Wireshark.
+
+Analyze SSL/TLS Handshake: Look for the SSL/TLS handshake packets in the captured traffic. You can typically identify these packets by the presence of protocols like TLSv1.2, TLSv1.3, etc. Analyze the handshake for details such as supported cipher suites, certificate information, and key exchange.
+
+Export and Save: If needed, you can export the captured packets for further analysis or sharing with others.
+
+Wireshark provides a powerful interface for capturing and analyzing network traffic, including SSL/TLS communication. However, capturing SSL/TLS traces may involve sensitive information, so ensure you have the necessary permissions and comply with any relevant privacy and security policies.
