@@ -1,3 +1,16 @@
+# Define the registry path for the paging settings
+$regPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
+
+# Set the new paging file settings
+Set-ItemProperty -Path $regPath -Name "PagingFiles" -Value "C:\pagefile.sys 1024 2048"  # Example: Set initial size to 1024 MB and maximum size to 2048 MB
+
+# Optionally, you can also disable automatic management of paging file size by the system
+Set-ItemProperty -Path $regPath -Name "DisablePagingExecutive" -Value 1
+
+
+
+
+
 https://www.tutorialspoint.com/how-to-add-an-attribute-to-the-xml-file-using-powershell
 
 Certainly! Below is an example of a PowerShell script that adds a new element to an XML file:
