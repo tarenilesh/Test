@@ -1,3 +1,16 @@
+Test email 
+
+# Define credentials
+$username = "your_username"
+$password = ConvertTo-SecureString "your_password" -AsPlainText -Force
+$credentials = New-Object System.Management.Automation.PSCredential($username, $password)
+
+# Send the email with credentials
+Send-MailMessage -SmtpServer $smtpServer -From $from -To $to -Subject $subject -Body $body -Credential $credentials
+
+
+
+
 # Define the registry path for the paging settings
 $regPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management"
 
