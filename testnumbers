@@ -1,0 +1,53 @@
+node {
+    def terraformPath = '/usr/local/bin/terraform'
+    def terraformDir = '/path/to/terraform/configuration'
+    def gitRepoUrl = 'https://github.com/your/repository.git'
+    def gitBranch = 'main'
+    def gitCredentialsId = 'git-credentials' // The ID of the credentials in Jenkins
+
+    stage('Git Operations') {
+        withCredentials([usernamePassword(credentialsId: gitCredentialsId, passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+            if (fileExists(terraformDir)) {
+                echo "Repository already exists. Pulling latest changes..."
+                bat(script: "git -C ${terraformDir} pull", returnStatus: true)
+            } else {
+                echo "Repository does not exist. Cloning repository..."
+                def cloneCommand = """
+                git clone -b ${gitBranch} ${gitRepoUrl} ${terraformDir}
+                """
+                def cloneEnv = [ "GIT_ASKPASS=${pwd()}/git-askpass.sh" ]
+                writeFile file: 'git-askpass.sh', text: "#!/bin/sh\necho '${GIT_PASSWORD}'"
+                bat(script: "chmod +x git-askpass.sh", returnStatus: true)
+                bat(script: cloneCommand, returnStatus: true, environment: cloneEnv)
+            }
+        }
+    }
+
+    stage('Approval') {
+        def userInput = input(
+            id: 'UserInput', message: 'Do you want to deploy the Terraform code?', parameters: [
+                [$class: 'ChoiceParameterDefinition', choices: ['Deploy', 'Abort'], description: 'Select whether to deploy or abort.', name: 'Action']
+            ]
+        )
+
+        if (userInput == 'Abort') {
+            error "Deployment aborted by the user."
+        }
+    }
+
+    stage('Terraform Initialization') {
+        echo "Initializing Terraform..."
+        bat(script: "${terraformPath} init", returnStatus: true, dir: terraformDir)
+    }
+
+    stage('Terraform Plan') {
+        echo "Generating Terraform plan..."
+        def planOutput = bat(script: "${terraformPath} plan", returnStdout: true, returnStatus: true, dir: terraformDir).trim()
+        echo "Terraform Plan Output:\n${planOutput}"
+    }
+
+    stage('Terraform Apply') {
+        echo "Applying Terraform configuration..."
+        bat(script: "${terraformPath} apply -auto-approve", returnStatus: true, dir: terraformDir)
+    }
+}
