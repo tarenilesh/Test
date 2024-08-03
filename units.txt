@@ -1,0 +1,86 @@
+pipeline {
+    agent { label 'linux' }
+
+    parameters {
+        string(name: 'MODULE_NAME', defaultValue: '', description: 'Name of the Terraform module to apply')
+    }
+
+    environment {
+        TERRAFORM_PATH = '/usr/local/bin/terraform'
+        TERRAFORM_DIR = '/path/to/terraform/configuration'
+        GIT_REPO_URL = 'https://github.com/your/repository.git'
+        GIT_BRANCH = 'main'
+        GIT_CREDENTIALS_ID = 'git-credentials' // The ID of the credentials in Jenkins
+    }
+
+    stages {
+        stage('Git Operations') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIALS_ID, passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                        if (fileExists(env.TERRAFORM_DIR)) {
+                            echo "Repository already exists. Pulling latest changes..."
+                            sh "git -C ${env.TERRAFORM_DIR} pull"
+                        } else {
+                            echo "Repository does not exist. Cloning repository..."
+                            def cloneCommand = "git clone -b ${env.GIT_BRANCH} ${env.GIT_REPO_URL} ${env.TERRAFORM_DIR}"
+                            writeFile file: 'git-askpass.sh', text: "#!/bin/sh\necho '${GIT_PASSWORD}'"
+                            sh 'chmod +x git-askpass.sh'
+                            sh "GIT_ASKPASS=${pwd()}/git-askpass.sh ${cloneCommand}"
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Approval') {
+            steps {
+                script {
+                    def userInput = input(
+                        id: 'UserInput', message: 'Do you want to deploy the Terraform code?', parameters: [
+                            choice(name: 'Action', choices: ['Deploy', 'Abort'], description: 'Select whether to deploy or abort.')
+                        ]
+                    )
+
+                    if (userInput == 'Abort') {
+                        error "Deployment aborted by the user."
+                    }
+                }
+            }
+        }
+
+        stage('Terraform Initialization') {
+            steps {
+                script {
+                    echo "Initializing Terraform..."
+                    sh "${env.TERRAFORM_PATH} init -input=false"
+                }
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                script {
+                    echo "Generating Terraform plan..."
+                    def planOutput = sh(script: "${env.TERRAFORM_PATH} plan -target=module.${params.MODULE_NAME} -input=false", returnStdout: true).trim()
+                    echo "Terraform Plan Output:\n${planOutput}"
+                }
+            }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                script {
+                    echo "Applying Terraform configuration..."
+                    sh "${env.TERRAFORM_PATH} apply -auto-approve -target=module.${params.MODULE_NAME} -input=false"
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline completed.'
+        }
+    }
+}
